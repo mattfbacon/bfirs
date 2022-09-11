@@ -1,0 +1,15 @@
+[package]
+edition = "2021"
+name = "bfirs-bin"
+version = "0.1.0"
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+argh = "0.1"
+bfirs = { path = "../lib" }
+strum = "0.24"
+strum_macros = "0.24"

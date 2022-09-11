@@ -1,16 +1,5 @@
-[package]
-name = "bfirs"
-version = "0.1.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-thiserror = "1.0"
-strum = "0.24"
-strum_macros = "0.24"
-argh = "0.1"
-
+[workspace]
+members = ["lib", "bin"]
 
 [profile.release-lto]
 inherits = "release"
