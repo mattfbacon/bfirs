@@ -117,24 +117,19 @@ impl<T: CellType> InstructionStream<T> {
 		let mut write_idx = 0;
 		'stream: while read_idx < len {
 			let mut current = stream[read_idx];
-			eprintln!("current is {current:?}");
 			'fold: while let Some(&next) = stream.get({
 				read_idx += 1;
 				read_idx
 			}) {
-				eprintln!("next is {next:?}");
 				match current.fold_with(next) {
 					FoldResult::Folded(folded) => {
-						eprintln!("optimizing into {folded:?}");
 						current = folded;
 					}
 					FoldResult::NoOp => {
-						eprintln!("optimizing into no op");
 						read_idx += 1; // we did read the next instruction
 						continue 'stream; // but skip writing instruction and incrementing `write_idx`
 					}
 					FoldResult::CantFold => {
-						eprintln!("can't fold");
 						break 'fold;
 					}
 				}
