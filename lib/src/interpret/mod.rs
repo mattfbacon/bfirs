@@ -11,8 +11,13 @@ use crate::instruction::Instruction;
 mod builder;
 pub use builder::Builder;
 
+fn compare_error(a: &io::Error, b: &io::Error) -> bool {
+	a.kind() == b.kind()
+}
+
 /// Errors that can occur while interpreting Brainfuck.
-#[derive(Debug, Error)]
+#[derive(Debug, Error, derivative::Derivative)]
+#[derivative(PartialEq, Eq)]
 pub enum Error {
 	/// Runtime overflowed its data array.
 	///
@@ -34,10 +39,10 @@ pub enum Error {
 	NotEnoughInstructions,
 	/// An IO error occurred while reading from the input.
 	#[error("IO error while reading from input: {0}")]
-	InputIo(io::Error),
+	InputIo(#[derivative(PartialEq(compare_with = "compare_error"))] io::Error),
 	/// An IO error occurred while writing to the output.
 	#[error("IO error while writing to output: {0}")]
-	OutputIo(io::Error),
+	OutputIo(#[derivative(PartialEq(compare_with = "compare_error"))] io::Error),
 }
 
 /// A Brainfuck interpreter.
