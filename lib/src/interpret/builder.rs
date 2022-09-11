@@ -1,5 +1,3 @@
-use std::num::NonZeroU64;
-
 use super::Interpreter;
 
 /// Builds an [Interpreter].
@@ -10,7 +8,8 @@ pub struct Builder<T, I, O> {
 	array_len: usize,
 	starting_ptr: usize,
 	fill: T,
-	instruction_limit: Option<NonZeroU64>,
+	#[cfg(feature = "limited")]
+	instruction_limit: Option<u64>,
 }
 
 impl<T, I, O> Builder<T, I, O> {
@@ -26,6 +25,7 @@ impl<T, I, O> Builder<T, I, O> {
 			array_len,
 			starting_ptr: 0,
 			fill: T::default(),
+			#[cfg(feature = "limited")]
 			instruction_limit: None,
 		}
 	}
@@ -41,7 +41,8 @@ impl<T, I, O> Builder<T, I, O> {
 			output: self.output,
 			ptr: self.starting_ptr,
 			last_flush: std::time::Instant::now(),
-			instructions_left: self.instruction_limit.map_or(0, NonZeroU64::get),
+			#[cfg(feature = "limited")]
+			instructions_left: self.instruction_limit,
 		}
 	}
 
@@ -54,6 +55,7 @@ impl<T, I, O> Builder<T, I, O> {
 			array_len: self.array_len,
 			starting_ptr: self.starting_ptr,
 			fill: self.fill,
+			#[cfg(feature = "limited")]
 			instruction_limit: self.instruction_limit,
 		}
 	}
@@ -67,6 +69,7 @@ impl<T, I, O> Builder<T, I, O> {
 			array_len: self.array_len,
 			starting_ptr: self.starting_ptr,
 			fill: self.fill,
+			#[cfg(feature = "limited")]
 			instruction_limit: self.instruction_limit,
 		}
 	}
@@ -92,13 +95,15 @@ impl<T, I, O> Builder<T, I, O> {
 	}
 
 	/// Set the instruction limit.
+	#[cfg(feature = "limited")]
 	#[must_use]
-	pub const fn limit(mut self, limit: NonZeroU64) -> Self {
+	pub const fn limit(mut self, limit: u64) -> Self {
 		self.instruction_limit = Some(limit);
 		self
 	}
 
 	/// Remove the instruction limit.
+	#[cfg(feature = "limited")]
 	#[must_use]
 	pub const fn no_limit(mut self) -> Self {
 		self.instruction_limit = None;

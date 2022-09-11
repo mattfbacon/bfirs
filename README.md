@@ -17,6 +17,12 @@ The MSRV (Minimum Supported Rust Version) of this project is currently 1.61, but
 
 A Cargo profile for building in release mode with LTO is provided. To use this profile pass `--profile release-lto` to Cargo commands.
 
+# Cargo features
+
+This crate provides one cargo feature:
+
+- `limited`: provides a mode of execution where the number of instructions is limited, and execution will stop with an error if that limit is reached. For performance reasons this is disabled by default.
+
 # Differences from `bfi`
 
 - Removed automatic compression. `+[]` will never halt in `bfirs`.

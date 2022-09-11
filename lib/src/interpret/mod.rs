@@ -51,7 +51,8 @@ pub struct Interpreter<T, I, O> {
 	data: Box<[T]>,
 	ptr: usize,
 	last_flush: Instant,
-	instructions_left: u64,
+	#[cfg(feature = "limited")]
+	instructions_left: Option<u64>,
 }
 
 impl Interpreter<(), (), ()> {
@@ -123,10 +124,15 @@ impl<T: CellType, I: io::Read, O: io::Write> Interpreter<T, I, O> {
 			.map_err(Error::InputIo)
 	}
 
-	fn internal_run<const LIMIT_INSTRUCTIONS: bool>(
-		&mut self,
-		stream: &[Instruction<T>],
-	) -> Result<(), Error> {
+	/// Run the interpreter on the given instruction stream.
+	///
+	/// If you want to run an interpreter based on the output of the compiler, use the `instructions` method on the compiler to get the instructions.
+	///
+	/// # Errors
+	///
+	/// See the variants of [Error].
+	#[allow(clippy::missing_panics_doc)] // panics are exceptional
+	pub fn run(&mut self, stream: &[Instruction<T>]) -> Result<(), Error> {
 		let mut instruction_pointer = 0usize;
 		let len = stream.len();
 
@@ -137,7 +143,8 @@ impl<T: CellType, I: io::Read, O: io::Write> Interpreter<T, I, O> {
 
 		// SAFETY: `ptr` bounds are checked by `ptr` mutating operations, so it will remain valid within this block.
 		while instruction_pointer < len {
-			if LIMIT_INSTRUCTIONS && self.instructions_left == 0 {
+			#[cfg(feature = "limited")]
+			if let Some(0) = self.instructions_left {
 				return Err(Error::NotEnoughInstructions);
 			}
 
@@ -169,26 +176,21 @@ impl<T: CellType, I: io::Read, O: io::Write> Interpreter<T, I, O> {
 
 			instruction_pointer += 1;
 
-			if LIMIT_INSTRUCTIONS {
-				self.instructions_left -= 1;
+			#[cfg(feature = "limited")]
+			if let Some(left) = &mut self.instructions_left {
+				*left = left.checked_sub(1).ok_or(Error::NotEnoughInstructions)?;
 			}
 		}
 
 		Ok(())
 	}
 
-	/// Run the interpreter on the given instruction stream.
+	/// Get the number of instructions remaining.
 	///
-	/// If you want to run an interpreter based on the output of the compiler, use the `instructions` method on the compiler to get the instructions.
-	///
-	/// # Errors
-	///
-	/// See the variants of [Error].
-	pub fn run(&mut self, stream: &[Instruction<T>]) -> Result<(), Error> {
-		if self.instructions_left == 0 {
-			self.internal_run::<false>(stream)
-		} else {
-			self.internal_run::<true>(stream)
-		}
+	/// Returns `None` if there is no instruction limit.
+	#[cfg(feature = "limited")]
+	#[must_use]
+	pub fn instructions_left(&self) -> Option<u64> {
+		self.instructions_left
 	}
 }
