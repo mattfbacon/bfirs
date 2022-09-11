@@ -4,7 +4,7 @@ name = "bfirs-bin"
 version = "0.1.0"
 
 [[bin]]
-name = "main"
+name = "bfirs"
 path = "src/main.rs"
 
 [dependencies]
