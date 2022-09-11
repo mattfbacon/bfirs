@@ -10,6 +10,6 @@ path = "src/main.rs"
 [dependencies]
 anyhow = "1"
 argh = "0.1"
-bfirs = { path = "../lib" }
+bfirs = { path = "../lib", features = ["limited"] }
 strum = "0.24"
 strum_macros = "0.24"

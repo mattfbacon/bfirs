@@ -193,4 +193,18 @@ impl<T: CellType, I: io::Read, O: io::Write> Interpreter<T, I, O> {
 	pub fn instructions_left(&self) -> Option<u64> {
 		self.instructions_left
 	}
+
+	/// Set the instruction limit.
+	///
+	/// Enables the limit if it was not already enabled.
+	#[cfg(feature = "limited")]
+	pub fn set_instruction_limit(&mut self, left: u64) {
+		self.instructions_left = Some(left);
+	}
+
+	/// Remove the instruction limit if one existed.
+	#[cfg(feature = "limited")]
+	pub fn remove_instruction_limit(&mut self) {
+		self.instructions_left = None;
+	}
 }

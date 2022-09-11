@@ -41,12 +41,17 @@ struct CommandLine {
 	/// whether to 'interpret' or 'render' to C (shorthand i/c)
 	#[argh(option, short = 'o', default = "Default::default()")]
 	output: Output,
+
+	/// an optional instruction limit for the interpreter
+	#[argh(option, short = 'l')]
+	limit: Option<u64>,
 }
 
 pub struct Args {
 	pub mode: Mode,
 	pub output: Output,
 	pub code: Vec<u8>,
+	pub instruction_limit: Option<u64>,
 }
 
 impl Args {
@@ -56,6 +61,7 @@ impl Args {
 			args,
 			mode,
 			output,
+			limit,
 		} = argh::from_env();
 
 		let code = match (file, args) {
@@ -67,6 +73,11 @@ impl Args {
 			(None, None) => vec![],
 		};
 
-		Ok(Self { mode, output, code })
+		Ok(Self {
+			mode,
+			output,
+			code,
+			instruction_limit: limit,
+		})
 	}
 }
