@@ -27,9 +27,43 @@ pub mod compile;
 pub mod instruction;
 pub mod interpret;
 
+pub use cell_type::CellType;
 pub use compile::InstructionStream;
 pub use instruction::Instruction;
 pub use interpret::Interpreter;
+
+/// Convenience method to compile and optimize the code in `input`.
+///
+/// # Errors
+///
+/// Returns `Err` iff compilation or optimization returns `Err`.
+pub fn compile<T: CellType>(input: &str) -> Result<InstructionStream<T>, compile::Error> {
+	InstructionStream::optimized_from_code(input.bytes())
+}
+
+/// Convenience method to interpret the given instruction stream.
+///
+/// # Errors
+///
+/// Returns `Err` iff the interpreter returns `Err`.
+pub fn interpret<T: CellType>(stream: &InstructionStream<T>) -> Result<(), interpret::Error> {
+	Interpreter::build_stdio()
+		.configure_for(stream)
+		.build()
+		.run(stream.instructions())
+}
+
+/// Convenience method to compile, optimize, and interpret the code in `input`.
+///
+/// Uses 8-bit mode.
+///
+/// # Panics
+///
+/// Panics if compiling, optimizing, or interpreting fails.
+pub fn run(input: &str) {
+	let stream = compile::<u8>(input).expect("compilation failed");
+	interpret(&stream).expect("interpreting failed");
+}
 
 /// The minimum size of the data array.
 pub const MIN_DATA_ARRAY_SIZE: usize = 30_000;
