@@ -3,6 +3,7 @@
 mod sealed {
 	pub trait Sealed:
 		Copy
+		+ Default
 		+ Eq
 		+ From<u8>
 		+ Into<u32>
