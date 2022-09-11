@@ -102,7 +102,7 @@ impl<T: CellType> InstructionStream<T> {
 				_ => None,
 			})
 			.sum::<usize>()
-			.max(Self::MIN_ARRAY_SIZE);
+			.max(crate::MIN_DATA_ARRAY_SIZE);
 
 		Ok(())
 	}

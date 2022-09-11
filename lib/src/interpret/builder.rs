@@ -1,3 +1,5 @@
+use std::io;
+
 use super::Interpreter;
 
 /// Builds an [Interpreter].
@@ -5,24 +7,32 @@ use super::Interpreter;
 pub struct Builder<T, I, O> {
 	input: I,
 	output: O,
-	array_len: usize,
+	data_array_size: usize,
 	initial_data_pointer: usize,
 	fill: T,
 	#[cfg(feature = "limited")]
 	instruction_limit: Option<u64>,
 }
 
+impl<'i, 'o, T: Default> Builder<T, io::StdinLock<'i>, io::StdoutLock<'o>> {
+	/// Create a new builder, using stdin for the input and stdout for the output.
+	#[must_use]
+	pub fn stdio() -> Self {
+		Self::new(io::stdin().lock(), io::stdout().lock())
+	}
+}
+
 impl<T, I, O> Builder<T, I, O> {
 	/// Create a new builder.
 	#[must_use]
-	pub fn new(input: I, output: O, array_len: usize) -> Self
+	pub fn new(input: I, output: O) -> Self
 	where
 		T: Default,
 	{
 		Self {
 			output,
 			input,
-			array_len,
+			data_array_size: crate::MIN_DATA_ARRAY_SIZE,
 			initial_data_pointer: 0,
 			fill: T::default(),
 			#[cfg(feature = "limited")]
@@ -36,7 +46,7 @@ impl<T, I, O> Builder<T, I, O> {
 		T: Clone,
 	{
 		Interpreter {
-			data: vec![self.fill; self.array_len].into_boxed_slice(),
+			data: vec![self.fill; self.data_array_size].into_boxed_slice(),
 			input: self.input,
 			output: self.output,
 			data_pointer: self.initial_data_pointer,
@@ -52,7 +62,7 @@ impl<T, I, O> Builder<T, I, O> {
 		Builder {
 			input,
 			output: self.output,
-			array_len: self.array_len,
+			data_array_size: self.data_array_size,
 			initial_data_pointer: self.initial_data_pointer,
 			fill: self.fill,
 			#[cfg(feature = "limited")]
@@ -66,7 +76,7 @@ impl<T, I, O> Builder<T, I, O> {
 		Builder {
 			output,
 			input: self.input,
-			array_len: self.array_len,
+			data_array_size: self.data_array_size,
 			initial_data_pointer: self.initial_data_pointer,
 			fill: self.fill,
 			#[cfg(feature = "limited")]
@@ -74,10 +84,10 @@ impl<T, I, O> Builder<T, I, O> {
 		}
 	}
 
-	/// Set the length of the data array.
+	/// Set the size of the data array.
 	#[must_use]
-	pub const fn array_len(mut self, array_len: usize) -> Self {
-		self.array_len = array_len;
+	pub const fn data_array_size(mut self, size: usize) -> Self {
+		self.data_array_size = size;
 		self
 	}
 
@@ -97,7 +107,7 @@ impl<T, I, O> Builder<T, I, O> {
 	/// Set the instruction limit.
 	#[cfg(feature = "limited")]
 	#[must_use]
-	pub const fn limit(mut self, limit: u64) -> Self {
+	pub const fn instruction_limit(mut self, limit: u64) -> Self {
 		self.instruction_limit = Some(limit);
 		self
 	}
@@ -105,8 +115,18 @@ impl<T, I, O> Builder<T, I, O> {
 	/// Remove the instruction limit.
 	#[cfg(feature = "limited")]
 	#[must_use]
-	pub const fn no_limit(mut self) -> Self {
+	pub const fn no_instruction_limit(mut self) -> Self {
 		self.instruction_limit = None;
+		self
+	}
+
+	/// Configure the interpreter based on the given instruction stream.
+	#[must_use]
+	pub fn configure_for(mut self, stream: &crate::compile::InstructionStream<T>) -> Self
+	where
+		T: crate::cell_type::CellType,
+	{
+		self.data_array_size = stream.recommended_array_size();
 		self
 	}
 }

@@ -14,7 +14,9 @@ fn main() -> anyhow::Result<()> {
 
 			match args.output {
 				Output::Interpret => {
-					let mut interpreter = Interpreter::new_stdio::<$ty>(code.recommended_array_size());
+					let mut interpreter = Interpreter::build_stdio::<$ty>()
+						.configure_for(&code)
+						.build();
 					if let Some(limit) = args.instruction_limit {
 						interpreter.set_instruction_limit(limit);
 					}

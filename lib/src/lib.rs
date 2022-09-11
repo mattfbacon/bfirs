@@ -30,3 +30,6 @@ pub mod interpret;
 pub use compile::InstructionStream;
 pub use instruction::Instruction;
 pub use interpret::Interpreter;
+
+/// The minimum size of the data array.
+pub const MIN_DATA_ARRAY_SIZE: usize = 30_000;

@@ -27,8 +27,6 @@ pub struct InstructionStream<T: CellType> {
 }
 
 impl<T: CellType> InstructionStream<T> {
-	const MIN_ARRAY_SIZE: usize = 30_000;
-
 	/// Creates a new instruction stream from instructions.
 	///
 	/// # Errors
@@ -38,7 +36,7 @@ impl<T: CellType> InstructionStream<T> {
 	pub fn new(instructions: Vec<Instruction<T>>) -> Result<Self, Error> {
 		let mut stream = Self {
 			instructions,
-			recommended_array_size: Self::MIN_ARRAY_SIZE,
+			recommended_array_size: crate::MIN_DATA_ARRAY_SIZE,
 		};
 		stream.update_jump_points()?;
 		Ok(stream)
@@ -65,7 +63,7 @@ impl<T: CellType> InstructionStream<T> {
 	pub fn optimized_from_code(input: impl Iterator<Item = u8>) -> Result<Self, Error> {
 		let mut stream = Self {
 			instructions: Self::instructions_from_text(input),
-			recommended_array_size: Self::MIN_ARRAY_SIZE,
+			recommended_array_size: crate::MIN_DATA_ARRAY_SIZE,
 		};
 
 		stream.optimize()?;

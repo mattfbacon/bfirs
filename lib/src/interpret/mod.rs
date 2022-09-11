@@ -58,16 +58,21 @@ pub struct Interpreter<T, I, O> {
 impl Interpreter<(), (), ()> {
 	/// Start building a new interpreter.
 	#[must_use]
-	pub fn build<T: Default, I, O>(input: I, output: O, array_len: usize) -> Builder<T, I, O> {
-		Builder::new(input, output, array_len)
+	pub fn build<T: Default, I, O>(input: I, output: O) -> Builder<T, I, O> {
+		Builder::new(input, output)
 	}
 
-	/// Create a new interpreter using stdin and stdout.
+	/// Start building a new interpreter, using stdin for input and stdout for output.
+	#[must_use]
+	pub fn build_stdio<'i, 'o, T: Default>() -> Builder<T, io::StdinLock<'i>, io::StdoutLock<'o>> {
+		Builder::stdio()
+	}
+
+	/// Create a new interpreter using stdin for input and stdout for output.
 	#[must_use]
 	pub fn new_stdio<'i, 'o, T: Clone + Default>(
-		array_len: usize,
 	) -> Interpreter<T, io::StdinLock<'i>, io::StdoutLock<'o>> {
-		Builder::new(io::stdin().lock(), io::stdout().lock(), array_len).build()
+		Builder::new(io::stdin().lock(), io::stdout().lock()).build()
 	}
 }
 
