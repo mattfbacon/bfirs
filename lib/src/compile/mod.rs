@@ -87,6 +87,12 @@ impl<T: CellType> InstructionStream<T> {
 		&self.instructions
 	}
 
+	/// Consume the instruction stream, returning just the instructions.
+	#[must_use]
+	pub fn into_instructions(self) -> Vec<Instruction<T>> {
+		self.instructions
+	}
+
 	#[must_use]
 	fn instructions_from_text(text: impl Iterator<Item = u8>) -> Vec<Instruction<T>> {
 		text

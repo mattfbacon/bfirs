@@ -185,6 +185,24 @@ impl<T: CellType, I: io::Read, O: io::Write> Interpreter<T, I, O> {
 		Ok(())
 	}
 
+	/// Get the contents of the data array.
+	#[must_use]
+	pub fn data(&self) -> &[T] {
+		&self.data
+	}
+
+	/// Consume this executor, returning just the data array.
+	#[must_use]
+	pub fn into_data(self) -> Box<[T]> {
+		self.data
+	}
+
+	/// Get the data pointer.
+	#[must_use]
+	pub fn data_pointer(&self) -> usize {
+		self.data_pointer
+	}
+
 	/// Get the number of instructions remaining.
 	///
 	/// Returns `None` if there is no instruction limit.
