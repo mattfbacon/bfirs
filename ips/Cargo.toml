@@ -1,0 +1,7 @@
+[package]
+edition = "2021"
+name = "bfirs-ips"
+version = "0.1.0"
+
+[dependencies]
+bfirs = { path = "../lib", features = ["limited"] }
