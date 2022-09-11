@@ -1,51 +1,10 @@
 //! Compile and optimize Brainfuck input.
 
-use std::num::NonZeroU32;
-
 use crate::cell_type::CellType;
 use crate::instruction::Instruction;
 
 mod optimize;
 mod render_c;
-
-impl<T: CellType> Instruction<T> {
-	fn fold_with(self, next: Self) -> Option<Self> {
-		match (self, next) {
-			(Self::Inc(amount1), Self::Inc(amount2)) => Some(Self::Inc(
-				T::NonZero::try_from(amount1.into().wrapping_add(amount2.into())).ok()?,
-			)),
-			(Self::Dec(amount1), Self::Dec(amount2)) => Some(Self::Dec(
-				T::NonZero::try_from(amount1.into().wrapping_add(amount2.into())).ok()?,
-			)),
-			(Self::Dec(sub), Self::Inc(add)) | (Self::Inc(add), Self::Dec(sub)) => {
-				let add = add.into();
-				let sub = sub.into();
-				if sub > add {
-					Some(Self::Dec(T::NonZero::try_from(sub - add).ok()?))
-				} else {
-					Some(Self::Inc(T::NonZero::try_from(add - sub).ok()?))
-				}
-			}
-			(Self::IncPtr(amount1), Self::IncPtr(amount2)) => Some(Self::IncPtr(NonZeroU32::new(
-				amount1.get().checked_add(amount2.get())?,
-			)?)),
-			(Self::DecPtr(amount1), Self::DecPtr(amount2)) => Some(Self::DecPtr(NonZeroU32::new(
-				amount1.get().checked_add(amount2.get())?,
-			)?)),
-			(Self::DecPtr(sub), Self::IncPtr(add)) | (Self::IncPtr(add), Self::DecPtr(sub)) => {
-				if sub > add {
-					Some(Self::DecPtr(NonZeroU32::new(sub.get() - add.get())?))
-				} else {
-					Some(Self::IncPtr(NonZeroU32::new(add.get() - sub.get())?))
-				}
-			}
-			(Self::Inc(..) | Self::Dec(..) | Self::Set(..), set @ Self::Set(..)) => Some(set),
-			(Self::Set(start), Self::Inc(add)) => Some(Self::Set(start.wrapping_add(add.into()))),
-			(Self::Set(start), Self::Dec(sub)) => Some(Self::Set(start.wrapping_sub(sub.into()))),
-			_ => None,
-		}
-	}
-}
 
 /// Errors that can occur while compiling.
 #[derive(Copy, Clone, Debug, thiserror::Error)]
@@ -81,7 +40,7 @@ impl<T: CellType> InstructionStream<T> {
 			instructions,
 			recommended_array_size: Self::MIN_ARRAY_SIZE,
 		};
-		stream.insert_bf_jump_points()?;
+		stream.update_jump_points()?;
 		Ok(stream)
 	}
 
@@ -135,7 +94,7 @@ impl<T: CellType> InstructionStream<T> {
 			.collect()
 	}
 
-	fn insert_bf_jump_points(&mut self) -> Result<(), Error> {
+	fn update_jump_points(&mut self) -> Result<(), Error> {
 		let mut stack = Vec::<usize>::new();
 
 		let stream = &mut self.instructions;
