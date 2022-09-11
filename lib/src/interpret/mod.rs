@@ -49,7 +49,7 @@ pub struct Interpreter<T, I, O> {
 	output: O,
 	input: I,
 	data: Box<[T]>,
-	ptr: usize,
+	data_pointer: usize,
 	last_flush: Instant,
 	#[cfg(feature = "limited")]
 	instructions_left: Option<u64>,
@@ -76,30 +76,30 @@ impl<T: CellType, I: io::Read, O: io::Write> Interpreter<T, I, O> {
 	#[must_use]
 	unsafe fn cur_unchecked(&self) -> T {
 		// SAFETY: The caller has asserted that the current pointer is a valid index
-		debug_assert!(self.ptr < self.data.len());
-		*self.data.get_unchecked(self.ptr)
+		debug_assert!(self.data_pointer < self.data.len());
+		*self.data.get_unchecked(self.data_pointer)
 	}
 
 	#[inline]
 	unsafe fn map_current(&mut self, func: impl FnOnce(T) -> T) {
 		// SAFETY: The caller has asserted that the current pointer is a valid index
-		debug_assert!(self.ptr < self.data.len());
-		*self.data.get_unchecked_mut(self.ptr) = func(self.cur_unchecked());
+		debug_assert!(self.data_pointer < self.data.len());
+		*self.data.get_unchecked_mut(self.data_pointer) = func(self.cur_unchecked());
 	}
 
 	#[inline]
 	fn inc_ptr_by(&mut self, v: usize) -> Result<(), Error> {
-		self.ptr += v;
-		if self.ptr >= self.data.len() {
-			self.ptr -= v;
-			return Err(Error::Overflow);
-		}
+		self.data_pointer = self
+			.data_pointer
+			.checked_add(v)
+			.filter(|&new| new < self.data.len())
+			.ok_or(Error::Overflow)?;
 		Ok(())
 	}
 
 	#[inline]
 	fn dec_ptr_by(&mut self, v: usize) -> Result<(), Error> {
-		self.ptr = self.ptr.checked_sub(v).ok_or(Error::Underflow)?;
+		self.data_pointer = self.data_pointer.checked_sub(v).ok_or(Error::Underflow)?;
 		Ok(())
 	}
 
@@ -137,7 +137,7 @@ impl<T: CellType, I: io::Read, O: io::Write> Interpreter<T, I, O> {
 		let len = stream.len();
 
 		// SAFETY: check the pointer now to ensure it's in bounds before any `_unchecked` ops assume so.
-		if self.ptr >= self.data.len() {
+		if self.data_pointer >= self.data.len() {
 			return Err(Error::InitOverflow);
 		}
 

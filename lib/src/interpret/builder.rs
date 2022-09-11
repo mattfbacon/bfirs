@@ -6,7 +6,7 @@ pub struct Builder<T, I, O> {
 	input: I,
 	output: O,
 	array_len: usize,
-	starting_ptr: usize,
+	initial_data_pointer: usize,
 	fill: T,
 	#[cfg(feature = "limited")]
 	instruction_limit: Option<u64>,
@@ -23,7 +23,7 @@ impl<T, I, O> Builder<T, I, O> {
 			output,
 			input,
 			array_len,
-			starting_ptr: 0,
+			initial_data_pointer: 0,
 			fill: T::default(),
 			#[cfg(feature = "limited")]
 			instruction_limit: None,
@@ -39,7 +39,7 @@ impl<T, I, O> Builder<T, I, O> {
 			data: vec![self.fill; self.array_len].into_boxed_slice(),
 			input: self.input,
 			output: self.output,
-			ptr: self.starting_ptr,
+			data_pointer: self.initial_data_pointer,
 			last_flush: std::time::Instant::now(),
 			#[cfg(feature = "limited")]
 			instructions_left: self.instruction_limit,
@@ -53,7 +53,7 @@ impl<T, I, O> Builder<T, I, O> {
 			input,
 			output: self.output,
 			array_len: self.array_len,
-			starting_ptr: self.starting_ptr,
+			initial_data_pointer: self.initial_data_pointer,
 			fill: self.fill,
 			#[cfg(feature = "limited")]
 			instruction_limit: self.instruction_limit,
@@ -67,7 +67,7 @@ impl<T, I, O> Builder<T, I, O> {
 			output,
 			input: self.input,
 			array_len: self.array_len,
-			starting_ptr: self.starting_ptr,
+			initial_data_pointer: self.initial_data_pointer,
 			fill: self.fill,
 			#[cfg(feature = "limited")]
 			instruction_limit: self.instruction_limit,
@@ -87,10 +87,10 @@ impl<T, I, O> Builder<T, I, O> {
 		Self { fill, ..self }
 	}
 
-	/// Set the starting position.
+	/// Set the initial position of the data pointer.
 	#[must_use]
-	pub const fn starting_ptr(mut self, ptr: usize) -> Self {
-		self.starting_ptr = ptr;
+	pub const fn initial_data_pointer(mut self, ptr: usize) -> Self {
+		self.initial_data_pointer = ptr;
 		self
 	}
 
