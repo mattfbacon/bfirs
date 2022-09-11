@@ -26,6 +26,8 @@ pub mod cell_type;
 pub mod compile;
 pub mod instruction;
 pub mod interpret;
+#[cfg(test)]
+mod test;
 
 pub use cell_type::CellType;
 pub use compile::InstructionStream;
