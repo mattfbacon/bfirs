@@ -104,7 +104,7 @@ impl<T: CellType, I: io::Read, O: io::Write> Interpreter<T, I, O> {
 
 	#[inline]
 	fn write(&mut self, v: u8) -> Result<(), Error> {
-		let _ = self.output.write(&[v]).map_err(Error::OutputIo)?;
+		self.output.write_all(&[v]).map_err(Error::OutputIo)?;
 
 		// based on 60 fps update (actually 62.5)
 		if self.last_flush.elapsed().as_millis() > 16 {
